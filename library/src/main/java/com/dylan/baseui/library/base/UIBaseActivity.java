@@ -8,8 +8,15 @@ import android.view.View;
 
 import com.dylan.baseui.library.IBaseConfig;
 import com.dylan.baseui.library.ILayout;
+import com.dylan.baseui.library.R;
 import com.dylan.baseui.library.refresh.IOnLoadListener;
+import com.dylan.baseui.library.utils.PermissionHelper;
 import com.dylan.baseui.library.widget.stateview.IStateView;
+
+import java.util.List;
+
+import pub.devrel.easypermissions.AppSettingsDialog;
+import pub.devrel.easypermissions.EasyPermissions;
 
 /**
  * Copyright (C) 2014-2020,Qiniu Tech. Co., Ltd.
@@ -17,9 +24,12 @@ import com.dylan.baseui.library.widget.stateview.IStateView;
  * Date: 2016-04-14
  * Description:
  */
-public abstract class UIBaseActivity extends AppCompatActivity implements ILayout, IStateView, IOnLoadListener, IBaseConfig {
+public abstract class UIBaseActivity extends AppCompatActivity implements ILayout, IStateView, IOnLoadListener,
+        IBaseConfig, EasyPermissions.PermissionCallbacks {
 
     public UIBaseHelper helper;
+    private int mCurrentPermissionRequestCode = -1;
+    private PermissionHelper mPermissionHelper = new PermissionHelper(this);
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -55,7 +65,7 @@ public abstract class UIBaseActivity extends AppCompatActivity implements ILayou
      * 是否启用下拉刷新
      */
     @Override
-    public boolean isRefreshEnable(){
+    public boolean isRefreshEnable() {
         return false;
     }
 
@@ -63,7 +73,7 @@ public abstract class UIBaseActivity extends AppCompatActivity implements ILayou
      * 设置是否启用加载更多功能
      */
     @Override
-    public void enableLoadMore(boolean enable){
+    public void enableLoadMore(boolean enable) {
         helper.enableLoadMore(enable);
     }
 
@@ -71,7 +81,7 @@ public abstract class UIBaseActivity extends AppCompatActivity implements ILayou
      * 重置上拉加载更多状态
      */
     @Override
-    public void resetLoadMoreStatus(){
+    public void resetLoadMoreStatus() {
         helper.resetLoadMoreStatus();
     }
 
@@ -84,7 +94,7 @@ public abstract class UIBaseActivity extends AppCompatActivity implements ILayou
      * 获取下拉刷新控件颜色
      */
     @Override
-    public int getRefreshViewColor(){
+    public int getRefreshViewColor() {
         return -1;
     }
 
@@ -98,5 +108,34 @@ public abstract class UIBaseActivity extends AppCompatActivity implements ILayou
 
     public UIBaseHelper getHelper() {
         return helper;
+    }
+
+    public PermissionHelper getPermissionHelper() {
+        return mPermissionHelper;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        mPermissionHelper.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    @Override
+    public void onPermissionsGranted(int requestCode, List<String> perms) {
+        // activity可覆写进行获取权限后的处理
+    }
+
+    @Override
+    public void onPermissionsDenied(int requestCode, List<String> perms) {
+        // activity可覆写进行获取权限失败的处理
+        // 如果用户勾选了“不再询问”，说明情况后提示可以去应用设置界面再打开权限
+        if (EasyPermissions.somePermissionPermanentlyDenied(this, perms)) {
+            new AppSettingsDialog.Builder(this, getString(R.string.base_ui_rationale_ask_again))
+                    .setTitle(getString(R.string.base_ui_title_settings_dialog))
+                    .setPositiveButton(getString(R.string.base_ui_setting))
+                    .setNegativeButton(getString(R.string.base_ui_cancel), null)
+                    .build()
+                    .show();
+        }
     }
 }

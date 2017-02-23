@@ -10,8 +10,15 @@ import android.view.ViewGroup;
 
 import com.dylan.baseui.library.IBaseConfig;
 import com.dylan.baseui.library.ILayout;
+import com.dylan.baseui.library.R;
 import com.dylan.baseui.library.refresh.IOnLoadListener;
+import com.dylan.baseui.library.utils.PermissionHelper;
 import com.dylan.baseui.library.widget.stateview.IStateView;
+
+import java.util.List;
+
+import pub.devrel.easypermissions.AppSettingsDialog;
+import pub.devrel.easypermissions.EasyPermissions;
 
 /**
  * Copyright (C) 2014-2020,Qiniu Tech. Co., Ltd.
@@ -19,11 +26,13 @@ import com.dylan.baseui.library.widget.stateview.IStateView;
  * Date: 2016-03-24
  * Description:
  */
-public abstract class UIBaseFragment extends Fragment implements ILayout, IStateView, IOnLoadListener, IBaseConfig {
+public abstract class UIBaseFragment extends Fragment implements ILayout, IStateView, IOnLoadListener,
+        IBaseConfig, EasyPermissions.PermissionCallbacks {
 
     public boolean isInitDone = false; //是否初始化完成
     public boolean isLazyLoadTricked = false; //是否触发过懒加载
     public UIBaseHelper helper;
+    private PermissionHelper mPermissionHelper = new PermissionHelper(this);
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -38,7 +47,7 @@ public abstract class UIBaseFragment extends Fragment implements ILayout, IState
         isInitDone = true;
         isLazyLoadTricked = false;
         //初始化完成后，判断fragment是否可见，满足条件就去执行加载数据动作
-        if (isLazyLoadEnable() && getUserVisibleHint()){
+        if (isLazyLoadEnable() && getUserVisibleHint()) {
             isLazyLoadTricked = true;
             onLoadData();
         }
@@ -61,7 +70,7 @@ public abstract class UIBaseFragment extends Fragment implements ILayout, IState
     /**
      * 可见回调
      */
-    public void onVisible(){
+    public void onVisible() {
         //如果开启了懒加载，并同时满足初始化完成以及未触发过懒加载，就去执行加载数据动作
         if (isLazyLoadEnable() && !isLazyLoadTricked && isInitDone) {
             isLazyLoadTricked = true;
@@ -72,7 +81,7 @@ public abstract class UIBaseFragment extends Fragment implements ILayout, IState
     /**
      * 不可见回调
      */
-    public void onInvisible(){
+    public void onInvisible() {
         //不可见回调
     }
 
@@ -95,19 +104,19 @@ public abstract class UIBaseFragment extends Fragment implements ILayout, IState
      * 是否启用下拉刷新
      */
     @Override
-    public boolean isRefreshEnable(){
+    public boolean isRefreshEnable() {
         return false;
     }
 
     /**
      * 是否启用懒加载模式，用于ViewPager
      */
-    public boolean isLazyLoadEnable(){
+    public boolean isLazyLoadEnable() {
         return false;
     }
 
     @Override
-    public void enableLoadMore(boolean enable){
+    public void enableLoadMore(boolean enable) {
         helper.enableLoadMore(enable);
     }
 
@@ -115,7 +124,7 @@ public abstract class UIBaseFragment extends Fragment implements ILayout, IState
      * 重置上拉加载更多状态
      */
     @Override
-    public void resetLoadMoreStatus(){
+    public void resetLoadMoreStatus() {
         helper.resetLoadMoreStatus();
     }
 
@@ -129,7 +138,7 @@ public abstract class UIBaseFragment extends Fragment implements ILayout, IState
      */
     @Override
     @ColorInt
-    public int getRefreshViewColor(){
+    public int getRefreshViewColor() {
         return -1;
     }
 
@@ -144,6 +153,35 @@ public abstract class UIBaseFragment extends Fragment implements ILayout, IState
     public void resetLazyTrickFlag() {
         setUserVisibleHint(false);
         isLazyLoadTricked = false;
+    }
+
+    public PermissionHelper getPermissionHelper() {
+        return mPermissionHelper;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        mPermissionHelper.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    @Override
+    public void onPermissionsGranted(int requestCode, List<String> perms) {
+        // activity可覆写进行获取权限后的处理
+    }
+
+    @Override
+    public void onPermissionsDenied(int requestCode, List<String> perms) {
+        // activity可覆写进行获取权限失败的处理
+        // 如果用户勾选了“不再询问”，说明情况后提示可以去应用设置界面再打开权限
+        if (EasyPermissions.somePermissionPermanentlyDenied(this, perms)) {
+            new AppSettingsDialog.Builder(this, getString(R.string.base_ui_rationale_ask_again))
+                    .setTitle(getString(R.string.base_ui_title_settings_dialog))
+                    .setPositiveButton(getString(R.string.base_ui_setting))
+                    .setNegativeButton(getString(R.string.base_ui_cancel), null)
+                    .build()
+                    .show();
+        }
     }
 
 }

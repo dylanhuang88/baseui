@@ -31,4 +31,6 @@ dependencies {
     provided "com.android.support:appcompat-v7:$SUPPORT_VERSION"
     provided "com.android.support:recyclerview-v7:$SUPPORT_VERSION"
     provided "com.android.support:design:$SUPPORT_VERSION"
+
+    compile 'pub.devrel:easypermissions:0.2.1' //6.0权限动态申请
 }

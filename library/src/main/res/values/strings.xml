@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Library</string>
+    <string name="base_ui_rationale_ask_again">如果没有相关权限，部分功能可能无法正常使用。打开应用程序设置修改应用程序权限。</string>
+    <string name="base_ui_title_settings_dialog">权限申请</string>
+    <string name="base_ui_setting">设置</string>
+    <string name="base_ui_cancel">取消</string>
 </resources>
