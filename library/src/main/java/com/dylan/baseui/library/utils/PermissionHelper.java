@@ -1,6 +1,8 @@
 package com.dylan.baseui.library.utils;
 
+import android.app.Activity;
 import android.support.annotation.NonNull;
+import android.support.v4.app.Fragment;
 
 import java.util.List;
 
@@ -30,11 +32,18 @@ public class PermissionHelper implements EasyPermissions.PermissionCallbacks {
      * @param requestCode 请求code
      * @param perms       请求的权限
      */
-    public void requestPermissions(String rationale, int requestCode, @NonNull final String... perms) {
+    public void requestActivityPermissions(Activity activity, String rationale, int requestCode, @NonNull final String... perms) {
         //记住requestCode，如果不记住在处理时就不知道这个是不是对应的请求，会导致Activity和Fragment重复处理的情况
         mCurrentPermissionRequestCode = requestCode;
-        EasyPermissions.requestPermissions(this, rationale, requestCode, perms);
+        EasyPermissions.requestPermissions(activity, rationale, requestCode, perms);
     }
+
+    public void requestFragmentPermissions(Fragment fragment, String rationale, int requestCode, @NonNull final String... perms) {
+        //记住requestCode，如果不记住在处理时就不知道这个是不是对应的请求，会导致Activity和Fragment重复处理的情况
+        mCurrentPermissionRequestCode = requestCode;
+        EasyPermissions.requestPermissions(fragment, rationale, requestCode, perms);
+    }
+
 
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         if (requestCode == mCurrentPermissionRequestCode) {
